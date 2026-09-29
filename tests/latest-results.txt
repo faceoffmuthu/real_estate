@@ -1,0 +1,475 @@
+Testing isolated database nre_test_460e1e57a754
+Database `nre_test_460e1e57a754` ready.
+Schema applied.
+  + migration applied: 001_phase3_approvals.sql
+  + migration applied: 002_phase4_crm.sql
+  + created super_admin account: superadmin@crm.local
+  + created admin account: admin@crm.local
+  + created user account: user@crm.local
+Setup complete. Seed credentials are DEVELOPMENT ONLY — see backend/.env.
+
+[1mDatabase[0m
+  [32mPASS[0m PDO connection works
+  [32mPASS[0m table `roles` exists
+  [32mPASS[0m table `users` exists
+  [32mPASS[0m table `auth_tokens` exists
+  [32mPASS[0m table `activity_logs` exists
+  [32mPASS[0m table `settings` exists
+
+[1mUnauthenticated requests are rejected[0m
+  [32mPASS[0m GET auth/me.php (no session) → 401
+  [32mPASS[0m GET dashboard/super-admin.php (no session) → 401
+  [32mPASS[0m GET dashboard/admin.php (no session) → 401
+  [32mPASS[0m GET dashboard/user.php (no session) → 401
+  [32mPASS[0m GET users/list.php (no session) → 401
+  [32mPASS[0m GET users/view.php?id=1 (no session) → 401
+  [32mPASS[0m POST users/create.php (no session) → 401
+  [32mPASS[0m PUT users/update.php (no session) → 401
+  [32mPASS[0m GET activity/list.php (no session) → 401
+  [32mPASS[0m GET roles/list.php (no session) → 401
+  [32mPASS[0m GET settings/list.php (no session) → 401
+  [32mPASS[0m PUT settings/update.php (no session) → 401
+  [32mPASS[0m POST auth/change-password.php (no session) → 401
+  [32mPASS[0m forged token → 401
+  [32mPASS[0m malformed token → 401
+
+[1mLogin validation & invalid credentials[0m
+  [32mPASS[0m wrong password → 401
+  [32mPASS[0m unknown user → 401
+  [32mPASS[0m empty fields → 422
+  [32mPASS[0m field errors returned for login + password
+  [32mPASS[0m SQLi in login → 401
+  [32mPASS[0m GET on login (wrong method) → 405
+  [32mPASS[0m form-encoded POST rejected (CSRF guard) → 415
+  [32mPASS[0m invalid JSON body → 400
+
+[1mLogin per role[0m
+  [32mPASS[0m super admin login (username)
+  [32mPASS[0m admin login (email)
+  [32mPASS[0m user login (username)
+  [32mPASS[0m me returns role from backend
+  [32mPASS[0m me never exposes password hash
+
+[1mRole / permission matrix[0m
+  [32mPASS[0m super_admin GET dashboard/super-admin.php → 200
+  [32mPASS[0m admin       GET dashboard/super-admin.php → 403
+  [32mPASS[0m user        GET dashboard/super-admin.php → 403
+  [32mPASS[0m super_admin GET dashboard/admin.php → 403
+  [32mPASS[0m admin       GET dashboard/admin.php → 200
+  [32mPASS[0m user        GET dashboard/admin.php → 403
+  [32mPASS[0m super_admin GET dashboard/user.php → 403
+  [32mPASS[0m admin       GET dashboard/user.php → 403
+  [32mPASS[0m user        GET dashboard/user.php → 200
+  [32mPASS[0m super_admin GET users/list.php → 200
+  [32mPASS[0m admin       GET users/list.php → 200
+  [32mPASS[0m user        GET users/list.php → 403
+  [32mPASS[0m super_admin GET users/view.php?id=3 → 200
+  [32mPASS[0m admin       GET users/view.php?id=3 → 200
+  [32mPASS[0m user        GET users/view.php?id=3 → 403
+  [32mPASS[0m super_admin POST users/create.php → 422
+  [32mPASS[0m admin       POST users/create.php → 422
+  [32mPASS[0m user        POST users/create.php → 403
+  [32mPASS[0m super_admin PUT users/update.php → 200
+  [32mPASS[0m admin       PUT users/update.php → 200
+  [32mPASS[0m user        PUT users/update.php → 403
+  [32mPASS[0m super_admin GET roles/list.php → 200
+  [32mPASS[0m admin       GET roles/list.php → 200
+  [32mPASS[0m user        GET roles/list.php → 403
+  [32mPASS[0m super_admin GET settings/list.php → 200
+  [32mPASS[0m admin       GET settings/list.php → 403
+  [32mPASS[0m user        GET settings/list.php → 403
+  [32mPASS[0m super_admin PUT settings/update.php → 200
+  [32mPASS[0m admin       PUT settings/update.php → 403
+  [32mPASS[0m user        PUT settings/update.php → 403
+  [32mPASS[0m super_admin GET activity/list.php → 200
+  [32mPASS[0m admin       GET activity/list.php → 200
+  [32mPASS[0m user        GET activity/list.php → 200
+  [32mPASS[0m admin can only assign the user role
+
+[1mUser management — validation[0m
+  [32mPASS[0m invalid payload → 422
+  [32mPASS[0m errors for name/username/email/password
+  [32mPASS[0m duplicate email + username rejected
+  [32mPASS[0m invalid role value → 422
+  [32mPASS[0m invalid status value → 422
+  [32mPASS[0m super admin creating super_admin → 403
+  [32mPASS[0m admin creating an admin → 403
+  [32mPASS[0m user without assigned admin (super admin) → 422
+
+[1mUser management — lifecycle & hierarchy[0m
+  [32mPASS[0m super admin creates Admin → 201
+  [32mPASS[0m super admin creates User under Admin2 → 201
+  [32mPASS[0m User2 assigned to Admin2
+  [32mPASS[0m admin creates User → 201
+  [32mPASS[0m admin-created User is forced under that admin
+  [32mPASS[0m admin list contains own users only (not Admin2's user)
+  [32mPASS[0m admin views Admin2's user → 403
+  [32mPASS[0m admin edits Admin2's user → 403
+  [32mPASS[0m admin edits super admin → 403
+  [32mPASS[0m admin promotes own user to admin → 403
+  [32mPASS[0m admin moves own user to another admin → 403
+  [32mPASS[0m super admin edits own account via users API → 403
+  [32mPASS[0m view missing record → 404
+  [32mPASS[0m view with SQLi id → 422
+  [32mPASS[0m admin edits own user
+  [32mPASS[0m SQLi in search returns 200 with no rows
+  [32mPASS[0m new user can log in
+  [32mPASS[0m admin deactivates own user → 200
+  [32mPASS[0m deactivated user session revoked → 401
+  [32mPASS[0m deactivated user cannot log in → 403
+  [32mPASS[0m admin reactivates user → 200
+  [32mPASS[0m reactivated user can log in
+  [32mPASS[0m cannot demote an admin who still manages users
+  [32mPASS[0m super admin reassigns User2 to Admin → 200
+  [32mPASS[0m super admin demotes Admin2 to User → 200
+  [32mPASS[0m super admin promotes back to Admin → 200
+
+[1mActivity scope & logging[0m
+  [32mPASS[0m user sees only own activity
+  [32mPASS[0m admin activity excludes super admin
+  [32mPASS[0m activity logged: auth.login
+  [32mPASS[0m activity logged: auth.login_failed
+  [32mPASS[0m activity logged: access.denied
+  [32mPASS[0m activity logged: user.created
+  [32mPASS[0m activity logged: user.updated
+  [32mPASS[0m activity logged: user.deactivated
+  [32mPASS[0m activity logged: user.activated
+  [32mPASS[0m activity logged: user.role_changed
+  [32mPASS[0m activity logged: user.reassigned
+  [32mPASS[0m activity log stores IP address
+
+[1mPasswords & change password[0m
+  [32mPASS[0m all passwords stored as bcrypt hashes
+  [32mPASS[0m no plaintext seed password in DB
+  [32mPASS[0m wrong current password rejected
+  [32mPASS[0m mismatched confirmation rejected
+  [32mPASS[0m password changed → 200
+  [32mPASS[0m current session kept → 200
+  [32mPASS[0m other session revoked → 401
+  [32mPASS[0m login with new password
+  [32mPASS[0m phase 2 sessions ready (user, admin2, other-team user)
+
+[1mPhase 2 — Property types & process stages[0m
+  [32mPASS[0m sa lists property types (Rental, Residential, Commercial)
+  [32mPASS[0m admin lists property types (Rental, Residential, Commercial)
+  [32mPASS[0m user lists property types (Rental, Residential, Commercial)
+  [32mPASS[0m process stages list has 8 stages
+  [32mPASS[0m admin cannot create property type → 403
+  [32mPASS[0m user cannot create property type → 403
+  [32mPASS[0m duplicate property type name → 422
+  [32mPASS[0m invalid form section → 422
+  [32mPASS[0m super admin creates property type → 201
+  [32mPASS[0m super admin deactivates property type → 200
+  [32mPASS[0m inactive type hidden from users
+  [32mPASS[0m super admin sees inactive type
+  [32mPASS[0m record with inactive type rejected → 422
+  [32mPASS[0m reactivate property type → 200
+
+[1mPhase 2 — Record creation & validation[0m
+  [32mPASS[0m super admin cannot create records (view-only) → 403
+  [32mPASS[0m unauthenticated record list → 401
+  [32mPASS[0m empty record → 422 with field errors
+  [32mPASS[0m rental without rent amount → 422
+  [32mPASS[0m bad pincode / area / phone → 422
+  [32mPASS[0m unknown process stage → 422 → 422
+  [32mPASS[0m user creates rental record → 201
+  [32mPASS[0m reference generated by backend (RE-000000 format)
+  [32mPASS[0m created_by taken from session, not request
+  [32mPASS[0m phone stored normalised (+91…)
+  [32mPASS[0m irrelevant field dropped (sale_amount on rental)
+  [32mPASS[0m approval_status cannot be set by client
+
+[1mPhase 2 — Party duplicate handling[0m
+  [32mPASS[0m same phone, new party without confirmation → 409
+  [32mPASS[0m lookup finds existing party by phone
+  [32mPASS[0m lookup with invalid phone → 422
+  [32mPASS[0m super admin cannot use lookup → 403
+  [32mPASS[0m reuse existing party (residential record) → 201
+  [32mPASS[0m both records share one party
+  [32mPASS[0m rental fields dropped on residential record
+  [32mPASS[0m confirmed duplicate creates a separate party
+  [32mPASS[0m other team cannot link party by guessing its ID
+  [32mPASS[0m other team links party found via phone lookup → 201
+  [32mPASS[0m admin creates commercial record directly → 201
+  [32mPASS[0m international phone kept with its country code
+  [32mPASS[0m record references are unique
+
+[1mPhase 2 — Record scope & permissions[0m
+  [32mPASS[0m user sees own records only
+  [32mPASS[0m admin sees own + team users' records
+  [32mPASS[0m super admin sees all records
+  [32mPASS[0m super admin list reports can_create = false
+  [32mPASS[0m user views another team's record → 404
+  [32mPASS[0m user views admin's record → 404
+  [32mPASS[0m admin views team user's record (can_edit)
+  [32mPASS[0m super admin views any record (can_edit = false)
+  [32mPASS[0m view missing record → 404
+  [32mPASS[0m view with SQLi id → 422
+  [32mPASS[0m super admin cannot edit records → 403
+  [32mPASS[0m other team cannot edit user's record → 404
+  [32mPASS[0m user cannot edit admin's record → 404
+  [32mPASS[0m admin edits team user's record (updated_by = admin)
+
+[1mPhase 2 — Record updates[0m
+  [32mPASS[0m user updates own record + stage
+  [32mPASS[0m stage change logged
+  [32mPASS[0m unchanged update → "No changes to save"
+  [32mPASS[0m invalid update → 422, nothing saved
+  [32mPASS[0m archive record → 200
+  [32mPASS[0m archived hidden from default list
+  [32mPASS[0m archived shown with record_status=archived
+  [32mPASS[0m restore record → 200
+  [32mPASS[0m archive + restore logged
+  [32mPASS[0m record view includes activity history
+
+[1mPhase 2 — Search, filters, pagination[0m
+  [32mPASS[0m search by reference
+  [32mPASS[0m search by party name
+  [32mPASS[0m search by phone digits
+  [32mPASS[0m search by locality
+  [32mPASS[0m search by property type name
+  [32mPASS[0m filter by property type
+  [32mPASS[0m filter by process stage
+  [32mPASS[0m filter by city
+  [32mPASS[0m filter by created date (today)
+  [32mPASS[0m filter by created date (future) → none
+  [32mPASS[0m invalid date filter → 422
+  [32mPASS[0m from after to → 422
+  [32mPASS[0m invalid record_status filter → 422
+  [32mPASS[0m pagination (per_page=1, page 2 of 3)
+  [32mPASS[0m SQLi in record search → 200, no rows
+
+[1mPhase 2 — Parties[0m
+  [32mPASS[0m user party list (search by name)
+  [32mPASS[0m party view lists linked records within scope
+  [32mPASS[0m other team sees linked party but only its own record, cannot edit
+  [32mPASS[0m other team cannot see unlinked party → 404
+  [32mPASS[0m other team cannot edit party → 403
+  [32mPASS[0m super admin cannot edit party → 403
+  [32mPASS[0m invalid party email → 422
+  [32mPASS[0m creator edits party → 200
+  [32mPASS[0m admin edits team party → 200
+  [32mPASS[0m standalone party with existing phone → 409
+  [32mPASS[0m standalone party with confirmation → 201
+  [32mPASS[0m super admin sees all parties
+
+[1mPhase 2 — Dashboards & integrity[0m
+  [32mPASS[0m user dashboard: record totals by type
+  [32mPASS[0m admin dashboard counts own + team records
+  [32mPASS[0m super admin dashboard: records + Phase 1 stats
+  [32mPASS[0m dashboard totals match database
+  [32mPASS[0m foreign key enforced: property_type_id
+  [32mPASS[0m foreign key enforced: party_id
+  [32mPASS[0m foreign key enforced: process_stage_id
+  [32mPASS[0m foreign key enforced: created_by
+
+[1mPhase 3 — Drafts[0m
+  [32mPASS[0m user saves draft (no submit flag)
+  [32mPASS[0m draft is private: admin cannot view → 404
+  [32mPASS[0m draft is private: super admin cannot view → 404
+  [32mPASS[0m draft not in approval queue
+  [32mPASS[0m creator sees draft with can_submit
+
+[1mPhase 3 — Submit[0m
+  [32mPASS[0m admin cannot call submit → 403
+  [32mPASS[0m other user cannot submit someone's draft → 404
+  [32mPASS[0m user submits draft → pending with submitted_at
+  [32mPASS[0m submit again → 409 (already pending) → 409
+  [32mPASS[0m admin sees record in approval queue
+  [32mPASS[0m other team's admin does not see it
+  [32mPASS[0m super admin sees queue read-only
+  [32mPASS[0m user cannot open approval queue → 403
+  [32mPASS[0m admin notified of pending approval
+  [32mPASS[0m user notified of submission
+  [32mPASS[0m admin pending_approvals counter
+  [32mPASS[0m user creates + submits in one step → pending
+
+[1mPhase 3 — Queue search, filters, pagination[0m
+  [32mPASS[0m queue search by reference
+  [32mPASS[0m queue search by creator name
+  [32mPASS[0m queue search by phone digits
+  [32mPASS[0m queue search by location
+  [32mPASS[0m queue filter by property type
+  [32mPASS[0m queue filter by submitted date
+  [32mPASS[0m queue filter by creator
+  [32mPASS[0m queue pagination
+  [32mPASS[0m queue oldest submission first
+  [32mPASS[0m queue invalid date → 422 → 422
+
+[1mPhase 3 — Review security[0m
+  [32mPASS[0m user cannot approve own record → 403
+  [32mPASS[0m user cannot reject own record → 403
+  [32mPASS[0m super admin cannot approve (view-only) → 403
+  [32mPASS[0m other team's admin cannot approve → 404
+  [32mPASS[0m unauthenticated approve → 401
+  [32mPASS[0m approve invalid id → 422
+  [32mPASS[0m approve missing record → 404
+  [32mPASS[0m admin-created record is approved directly
+  [32mPASS[0m admin-created record not in queue
+  [32mPASS[0m admin-created history = created_approved
+  [32mPASS[0m admin cannot "approve" own record → 403
+  [32mPASS[0m user cannot submit admin record → 404
+  [32mPASS[0m user edits pending record → stays pending, approval fields ignored
+  [32mPASS[0m pending edit recorded in history
+
+[1mPhase 3 — Reject[0m
+  [32mPASS[0m reject without reason → 422 → 422
+  [32mPASS[0m reject with too-short reason → 422 → 422
+  [32mPASS[0m admin rejects with reason
+  [32mPASS[0m rejected record leaves the queue
+  [32mPASS[0m reject again → 409 → 409
+  [32mPASS[0m approve a rejected record → 409 (must be resubmitted) → 409
+  [32mPASS[0m user sees rejection reason + can resubmit
+  [32mPASS[0m user notified of rejection with reason
+
+[1mPhase 3 — Resubmit + approve[0m
+  [32mPASS[0m user corrects + resubmits → pending
+  [32mPASS[0m record rejection_reason cleared for new round
+  [32mPASS[0m rejection kept in history
+  [32mPASS[0m resubmitted record back in queue
+  [32mPASS[0m admin approves
+  [32mPASS[0m approve again → 409 → 409
+  [32mPASS[0m submit approved record → 409 → 409
+  [32mPASS[0m user notified of approval
+  [32mPASS[0m full timeline kept
+  [32mPASS[0m timeline records who acted
+  [32mPASS[0m activity logged: record.submitted
+  [32mPASS[0m activity logged: record.rejected
+  [32mPASS[0m activity logged: record.resubmitted
+  [32mPASS[0m activity logged: record.approved
+  [32mPASS[0m activity logged: record.review_opened
+
+[1mPhase 3 — Edit rules after approval[0m
+  [32mPASS[0m approved record: user edit_mode = progress
+  [32mPASS[0m user cannot change core fields of approved record → 403
+  [32mPASS[0m user cannot archive approved record → 403
+  [32mPASS[0m user updates stage + notes on approved record
+  [32mPASS[0m admin can still edit approved team record (stays approved)
+
+[1mPhase 3 — History, lists & dashboards[0m
+  [32mPASS[0m other team cannot read record history → 404
+  [32mPASS[0m super admin reads record history → 200
+  [32mPASS[0m super admin global history (filter: rejected)
+  [32mPASS[0m history invalid action → 422 → 422
+  [32mPASS[0m user history scoped to own records
+  [32mPASS[0m records filter approval_status=approved
+  [32mPASS[0m records filter approval_status=pending
+  [32mPASS[0m records filter created_by
+  [32mPASS[0m records invalid approval filter → 422 → 422
+  [32mPASS[0m records list returns creators for admin filter
+  [32mPASS[0m user dashboard approval counts
+  [32mPASS[0m admin dashboard queue preview + activity
+  [32mPASS[0m super admin dashboard approval stats
+  [32mPASS[0m by_approval counts match database
+
+[1mPhase 3 — Notifications[0m
+  [32mPASS[0m cannot mark another user's notification
+  [32mPASS[0m mark one as read
+  [32mPASS[0m mark-read invalid ids → 422 → 422
+  [32mPASS[0m mark all as read
+  [32mPASS[0m notifications require auth → 401
+  [32mPASS[0m user sees no pending_approvals counter
+
+[1mPhase 4 — Public signup[0m
+  [32mPASS[0m signup validation → 422
+  [32mPASS[0m signup validation → 422
+  [32mPASS[0m signup validation → 422
+  [32mPASS[0m signup validation → 422
+  [32mPASS[0m signup validation → 422
+  [32mPASS[0m signup ignores elevated role, manager and status → 201
+  [32mPASS[0m signup creates active User only, with normalized phone
+  [32mPASS[0m signup password hashed
+  [32mPASS[0m duplicate email case-insensitive → 409
+  [32mPASS[0m public user login
+  [32mPASS[0m public user cannot escalate own role → 403
+
+[1mPhase 4 — Password reset via SMTP[0m
+  [32mPASS[0m invalid forgot email → 422
+  [32mPASS[0m forgot response conceals account existence
+  [32mPASS[0m SMTP delivered actual frontend reset link
+  [32mPASS[0m only hash stored and 30 minute expiry
+  [32mPASS[0m raw token absent from API and audit logs
+  [32mPASS[0m invalid token → 422
+  [32mPASS[0m missing token → 422
+  [32mPASS[0m weak reset password → 422
+  [32mPASS[0m mismatched reset password → 422
+  [32mPASS[0m expired token rejected → 422
+  [32mPASS[0m reset succeeds → 200
+  [32mPASS[0m manipulated user_id cannot reset another user
+  [32mPASS[0m token cannot be reused → 422
+  [32mPASS[0m old sessions revoked → 401
+  [32mPASS[0m old password rejected → 401
+  [32mPASS[0m new password accepted
+
+[1mPhase 4 — CRM and follow-up permissions[0m
+  [32mPASS[0m owner can update CRM of approved record → 200
+  [32mPASS[0m CRM cannot mutate approval or ownership
+  [32mPASS[0m other user cannot mutate CRM → 404
+  [32mPASS[0m other admin cannot mutate CRM → 404
+  [32mPASS[0m super admin CRM view-only → 403
+  [32mPASS[0m cannot assign private record outside visibility → 422
+  [32mPASS[0m invalid priority → 422
+  [32mPASS[0m create follow-up → 201
+  [32mPASS[0m follow-up invalid date → 422
+  [32mPASS[0m follow-up invalid type → 422
+  [32mPASS[0m follow-up invalid notes type → 422
+  [32mPASS[0m other user cannot create follow-up → 404
+  [32mPASS[0m other user cannot complete follow-up → 404
+  [32mPASS[0m record-filtered list cannot bypass scope → 404
+  [32mPASS[0m follow-up list paginated and scoped
+  [32mPASS[0m summary matches database
+  [32mPASS[0m super admin reads CRM → 200
+  [32mPASS[0m follow-up reminder generated once
+  [32mPASS[0m admin reschedules follow-up → 200
+  [32mPASS[0m owner completes follow-up → 200
+  [32mPASS[0m completion time stored
+  [32mPASS[0m owner cancels follow-up → 200
+  [32mPASS[0m reopen follow-up → 200
+
+[1mPhase 4 — Interaction timeline and search[0m
+  [32mPASS[0m record note interaction → 201
+  [32mPASS[0m record call interaction → 201
+  [32mPASS[0m record whatsapp interaction → 201
+  [32mPASS[0m record meeting interaction → 201
+  [32mPASS[0m record site_visit interaction → 201
+  [32mPASS[0m record email interaction → 201
+  [32mPASS[0m record other interaction → 201
+  [32mPASS[0m last contacted persisted
+  [32mPASS[0m other user cannot add notes → 404
+  [32mPASS[0m other user cannot read timeline → 404
+  [32mPASS[0m timeline contains paginated real audit events
+  [32mPASS[0m priority filter
+  [32mPASS[0m assignment filter
+  [32mPASS[0m follow-up filter
+  [32mPASS[0m search by party email
+  [32mPASS[0m search by status
+  [32mPASS[0m sorting SQL injection rejected → 422
+  [32mPASS[0m priority sorting supported → 200
+  [32mPASS[0m CRM requires authentication → 401
+  [32mPASS[0m CRM requires authentication → 401
+
+[1mPhase 4 — Rate limiting[0m
+  [32mPASS[0m forgot requests throttled → 429
+
+[1mLogout[0m
+  [32mPASS[0m logout → 200
+  [32mPASS[0m token rejected after logout → 401
+  [32mPASS[0m logout logged
+
+[1mSecurity headers & error handling[0m
+  [32mPASS[0m X-Content-Type-Options: nosniff
+  [32mPASS[0m Cache-Control: no-store
+  [32mPASS[0m session cookie is HttpOnly + SameSite=Strict
+
+[1mBrute-force protection[0m
+  [32mPASS[0m login blocked after 30 failures → 429
+
+[1mCleanup[0m
+  removed 8 row(s) from real_estate_records
+  removed 7 row(s) from parties
+  removed 1 row(s) from property_types
+  removed 17 row(s) from notifications
+  removed test accounts: 4, 5, 6, 7, 8
+
+[1mResult: 388 passed, 0 failed[0m
+Temporary test database removed.

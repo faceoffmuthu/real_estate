@@ -1,0 +1,9 @@
+# Deny directory listings and any dotfile (.env, .htaccess, .git ...)
+Options -Indexes
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+# Only the api/ folder is meant to be reachable over HTTP
+<FilesMatch "^(bootstrap\.php|.*\.sql|.*\.md)$">
+    Require all denied
+</FilesMatch>

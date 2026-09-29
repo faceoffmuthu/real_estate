@@ -1,0 +1,59 @@
+[23-Sep-2026 12:34:46 UTC] PHP Fatal error:  Uncaught ErrorException: Undefined array key "data" in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase2_records.php:47
+Stack trace:
+#0 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase2_records.php(47): {closure}(2, 'Undefined array...', 'C:\\xampp\\htdocs...', 47)
+#1 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\api_test.php(277): require('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase2_records.php on line 47
+[23-Sep-2026 13:47:46 UTC] PHP Fatal error:  Uncaught ErrorException: Undefined array key "data" in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase4_crm.php:57
+Stack trace:
+#0 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase4_crm.php(57): {closure}()
+#1 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\api_test.php(280): require('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase4_crm.php on line 57
+[24-Sep-2026 06:15:22 UTC] [password-reset] Delivery failed. Check SMTP configuration.
+[24-Sep-2026 06:44:44 UTC] [password-reset] Delivery failed. Check SMTP configuration.
+[24-Sep-2026 14:00:33 UTC] PHP Fatal error:  Uncaught RuntimeException: Address lookup is temporarily unavailable. You can enter the location details manually. in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\helpers\MapLookup.php:316
+Stack trace:
+#0 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\helpers\MapLookup.php(31): MapLookup::getJson()
+#1 Command line code(1) : eval()'d code(1): MapLookup::address()
+#2 Command line code(1): eval()
+#3 {main}
+  thrown in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\helpers\MapLookup.php on line 316
+[24-Sep-2026 14:03:42 UTC] PHP Fatal error:  Uncaught RuntimeException: We could not find an address for that map link. You can enter the location details manually. in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\helpers\MapLookup.php:34
+Stack trace:
+#0 Command line code(1) : eval()'d code(1): MapLookup::address()
+#1 Command line code(1): eval()
+#2 {main}
+  thrown in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\helpers\MapLookup.php on line 34
+[24-Sep-2026 14:27:08 UTC] PHP Fatal error:  Uncaught ErrorException: Undefined array key "id" in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase2_records.php:119
+Stack trace:
+#0 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase2_records.php(119): {closure}()
+#1 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\api_test.php(314): require('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase2_records.php on line 119
+[24-Sep-2026 15:21:30 UTC] PHP Fatal error:  Uncaught ErrorException: Undefined array key "id" in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase2_records.php:150
+Stack trace:
+#0 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase2_records.php(150): {closure}()
+#1 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\api_test.php(328): require('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\tests\phase2_records.php on line 150
+[26-Sep-2026 10:03:04 UTC] PDOException: SQLSTATE[HY000]: General error: 2006 MySQL server has gone away in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\core\Database.php:30
+Stack trace:
+#0 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\core\Database.php(30): PDO->prepare()
+#1 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\core\Database.php(46): Database::query()
+#2 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\api\auth\login.php(29): Database::fetch()
+#3 {main}
+[26-Sep-2026 10:03:18 UTC] PDOException: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\core\Database.php:17
+Stack trace:
+#0 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\core\Database.php(17): PDO->__construct()
+#1 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\core\Database.php(30): Database::connection()
+#2 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\core\Database.php(57): Database::query()
+#3 C:\xampp\htdocs\Lordminds\Real_Estate_CRM\backend\api\auth\login.php(20): Database::value()
+#4 {main}
+[29-Sep-2026 12:45:19 UTC] PDOException: could not find driver in C:\Users\Asus\Downloads\Real_Estate_CRM\Real_Estate_CRM\backend\core\Database.php:17
+Stack trace:
+#0 C:\Users\Asus\Downloads\Real_Estate_CRM\Real_Estate_CRM\backend\core\Database.php(17): PDO->__construct()
+#1 C:\Users\Asus\Downloads\Real_Estate_CRM\Real_Estate_CRM\backend\core\Database.php(30): Database::connection()
+#2 C:\Users\Asus\Downloads\Real_Estate_CRM\Real_Estate_CRM\backend\core\Database.php(60): Database::query()
+#3 C:\Users\Asus\Downloads\Real_Estate_CRM\Real_Estate_CRM\backend\api\auth\login.php(20): Database::value()
+#4 {main}

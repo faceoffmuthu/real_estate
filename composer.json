@@ -1,0 +1,21 @@
+{
+    "name": "real-estate-crm/backend",
+    "description": "Backend for Real Estate CRM",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "RealEstateCrm\\Backend\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "muthu",
+            "email": "faceoffmuthu@gmail.com"
+        }
+    ],
+    "require": {
+        "vlucas/phpdotenv": "^5.7",
+        "bramus/router": "^1.6",
+        "illuminate/database": "^8.83"
+    }
+}

@@ -18,7 +18,12 @@ final class Cors
         header('Cache-Control: no-store');
 
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-        if ($origin !== '' && in_array($origin, Config::get('cors.allowed_origins', []), true)) {
+        $allowed = Config::get('cors.allowed_origins', []);
+        if (empty($allowed)) {
+            $allowed = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+        }
+        
+        if ($origin !== '' && in_array($origin, $allowed, true)) {
             header("Access-Control-Allow-Origin: $origin");
             header('Access-Control-Allow-Credentials: true');
             header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');

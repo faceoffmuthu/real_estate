@@ -1,0 +1,6 @@
+{
+  "name": "backend",
+  "engines": {
+    "node": "22.x"
+  }
+}

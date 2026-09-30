@@ -118,7 +118,7 @@ final class Auth
             'path'     => Config::get('auth.cookie_path'),
             'secure'   => Config::get('auth.cookie_secure'),
             'httponly' => true,
-            'samesite' => 'Strict',
+            'samesite' => 'None',
         ]);
     }
 

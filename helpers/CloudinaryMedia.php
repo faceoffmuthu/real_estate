@@ -83,8 +83,11 @@ final class CloudinaryMedia
     /** @param array<string, string> $params */
     private static function signature(array $params): string
     {
+        // Cloudinary signs the raw, sorted name=value pairs. URL-encoding the
+        // folder value (and therefore its slashes) produces an invalid signature.
         ksort($params);
-        return hash('sha1', http_build_query($params, '', '&', PHP_QUERY_RFC3986) . (string) Config::get('media.cloudinary.api_secret'));
+        $toSign = implode('&', array_map(static fn (string $key, string $value) => "{$key}={$value}", array_keys($params), $params));
+        return hash('sha1', $toSign . (string) Config::get('media.cloudinary.api_secret'));
     }
 
     /** @return array<string, mixed> */

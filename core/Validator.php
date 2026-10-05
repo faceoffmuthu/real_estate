@@ -101,18 +101,41 @@ final class Validator
         return $this;
     }
 
+    /**
+     * Parses plain decimals plus amounts grouped with Indian or standard
+     * separators. A trailing group of one or two digits is treated as the
+     * decimal part; a three-digit group is a grouping separator.
+     */
+    public static function normaliseNumber(mixed $value): int|float|string|null
+    {
+        if (is_int($value) || is_float($value)) return $value;
+        if (!is_string($value)) return null;
+        $raw = preg_replace('/\s+/', '', trim($value));
+        if (!is_string($raw) || $raw === '' || !preg_match('/^\d+(?:[.,]\d+)*$/', $raw)) return null;
+
+        $dot = strrpos($raw, '.');
+        $comma = strrpos($raw, ',');
+        $last = max($dot === false ? -1 : $dot, $comma === false ? -1 : $comma);
+        $fraction = $last < 0 ? '' : substr($raw, $last + 1);
+        $hasDecimal = $last >= 0 && strlen($fraction) <= 2;
+        $integer = preg_replace('/[.,]/', '', $hasDecimal ? substr($raw, 0, $last) : $raw);
+        if (!is_string($integer) || $integer === '') return null;
+
+        $normalised = $hasDecimal ? "{$integer}.{$fraction}" : $integer;
+        return is_numeric($normalised) ? $normalised : null;
+    }
+
     /** Numeric value (int/float or numeric string) within [min, max]. */
     public function number(string $field, string $label, float $min = 0, float $max = PHP_FLOAT_MAX): self
     {
         if ($this->skip($field)) {
             return $this;
         }
-        $value = $this->data[$field];
-        if ((!is_int($value) && !is_float($value) && !(is_string($value) && is_numeric(trim($value))))) {
+        $number = self::normaliseNumber($this->data[$field]);
+        if ($number === null) {
             return $this->add($field, "$label must be a number.");
         }
-        $number = (float) $value;
-        if ($number < $min || $number > $max) {
+        if ((float) $number < $min || (float) $number > $max) {
             $fmt = static fn (float $n) => rtrim(rtrim(number_format($n, 2, '.', ''), '0'), '.');
             return $this->add($field, "$label must be between {$fmt($min)} and {$fmt($max)}.");
         }

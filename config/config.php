@@ -37,6 +37,17 @@ return [
         'lockout_minutes'   => max(1, (int) Env::get('AUTH_LOCKOUT_MINUTES', '15')),
     ],
 
+    // `local` is useful for XAMPP development. Set MEDIA_STORAGE=cloudinary
+    // in production so uploaded files survive server restarts and redeploys.
+    'media' => [
+        'provider' => Env::get('MEDIA_STORAGE', 'local'),
+        'cloudinary' => [
+            'cloud_name' => Env::get('CLOUDINARY_CLOUD_NAME', ''),
+            'api_key' => Env::get('CLOUDINARY_API_KEY', ''),
+            'api_secret' => Env::get('CLOUDINARY_API_SECRET', ''),
+        ],
+    ],
+
     'cors' => [
     'allowed_origins' => array_values(array_filter(array_map(
         'trim',

@@ -192,6 +192,16 @@ final class Records
      */
     public static function validate(array $data, ?array $current = null): array
     {
+        // Normalise visual number formatting before validation and storage.
+        // This accepts Indian amounts such as 2.05,00,000 without changing
+        // ordinary decimal values such as 4.17.
+        foreach (['area_sqft', 'area_value', 'bedrooms', 'bathrooms', 'rental_amount', 'security_deposit', 'sale_amount', 'market_price'] as $field) {
+            if (!self::isBlank($data[$field] ?? null)) {
+                $normalised = Validator::normaliseNumber($data[$field]);
+                if ($normalised !== null) $data[$field] = $normalised;
+            }
+        }
+
         $allowedAreaUnits = ['sq_ft', 'acre', 'cent'];
         // Existing rows may still hold a legacy unit. Permit it only when an
         // edit keeps the same value; new or changed values use the new set.

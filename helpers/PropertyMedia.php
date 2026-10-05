@@ -5,6 +5,8 @@ final class PropertyMedia
 {
     private const IMAGE_TYPES = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp'];
     private const VIDEO_TYPES = ['mp4' => 'video/mp4', 'webm' => 'video/webm'];
+    /** @var array<int, list<array{public_id:string, kind:string}>> */
+    private static array $uploadedCloudinaryAssets = [];
 
     public static function uploadedFiles(array $files): array
     {
@@ -38,6 +40,10 @@ final class PropertyMedia
 
     public static function purgeRecordFiles(int $recordId): void
     {
+        foreach (self::$uploadedCloudinaryAssets[$recordId] ?? [] as $asset) {
+            try { CloudinaryMedia::destroy($asset['public_id'], $asset['kind']); } catch (Throwable) { }
+        }
+        unset(self::$uploadedCloudinaryAssets[$recordId]);
         $base = realpath(BASE_PATH . '/uploads/properties');
         $dir = realpath(BASE_PATH . '/uploads/properties/' . $recordId);
         if (!$base || !$dir || !str_starts_with($dir, $base . DIRECTORY_SEPARATOR)) return;
@@ -79,21 +85,40 @@ final class PropertyMedia
         if (($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file((string) ($upload['tmp_name'] ?? '')) || !$expected || $mime !== $expected || (int) ($upload['size'] ?? 0) < 1 || (int) $upload['size'] > $max) Response::validation(['media' => 'The selected file type or size is not allowed.']);
         if ($kind === 'image' && @getimagesize($upload['tmp_name']) === false) Response::validation(['media' => 'The image file is invalid.']);
         $name = bin2hex(random_bytes(16)) . '.' . $ext;
+        $provider = CloudinaryMedia::enabled() ? 'cloudinary' : 'local';
+        $storageKey = null;
+        $deliveryUrl = null;
         $relative = 'properties/' . $recordId . '/' . ($kind === 'image' ? 'images' : 'videos') . '/' . $name;
-        $dir = BASE_PATH . '/uploads/properties/' . $recordId . '/' . ($kind === 'image' ? 'images' : 'videos');
-        if (!is_dir($dir) && !mkdir($dir, 0750, true) && !is_dir($dir)) throw new RuntimeException('Media directory unavailable.');
         $target = BASE_PATH . '/uploads/' . $relative;
-        if (!move_uploaded_file($upload['tmp_name'], $target)) throw new RuntimeException('Media upload failed.');
+        if ($provider === 'cloudinary') {
+            $asset = CloudinaryMedia::upload((string) $upload['tmp_name'], $mime, $kind, $recordId);
+            $storageKey = $asset['public_id'];
+            $deliveryUrl = $asset['secure_url'];
+            self::$uploadedCloudinaryAssets[$recordId][] = ['public_id' => $storageKey, 'kind' => $kind];
+        } else {
+            $dir = BASE_PATH . '/uploads/properties/' . $recordId . '/' . ($kind === 'image' ? 'images' : 'videos');
+            if (!is_dir($dir) && !mkdir($dir, 0750, true) && !is_dir($dir)) throw new RuntimeException('Media directory unavailable.');
+            if (!move_uploaded_file($upload['tmp_name'], $target)) throw new RuntimeException('Media upload failed.');
+        }
         try {
-            $id = Database::insert('INSERT INTO property_media (record_id, media_type, file_name, file_path, mime_type, file_size, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)', [$recordId, $kind, $name, $relative, $mime, (int) $upload['size'], (int) $actor['id']]);
-        } catch (Throwable $e) { @unlink($target); throw $e; }
+            $id = Database::insert('INSERT INTO property_media (record_id, media_type, file_name, file_path, storage_provider, storage_key, delivery_url, mime_type, file_size, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [$recordId, $kind, $name, $relative, $provider, $storageKey, $deliveryUrl, $mime, (int) $upload['size'], (int) $actor['id']]);
+        } catch (Throwable $e) {
+            if ($provider === 'cloudinary') CloudinaryMedia::destroy((string) $storageKey, $kind);
+            else @unlink($target);
+            throw $e;
+        }
         return ['id' => $id, 'media_type' => $kind, 'file_name' => $name, 'mime_type' => $mime, 'file_size' => (int) $upload['size'], 'created_at' => gmdate('Y-m-d H:i:s'), 'url' => '/api/property-media/file.php?id=' . $id];
     }
 
     public static function delete(int $id): void
     {
-        $row = Database::fetch('SELECT file_path FROM property_media WHERE id = ?', [$id]);
+        $row = Database::fetch('SELECT file_path, media_type, storage_provider, storage_key FROM property_media WHERE id = ?', [$id]);
         if ($row === null) Response::notFound('Media was not found.');
+        if (($row['storage_provider'] ?? 'local') === 'cloudinary') {
+            CloudinaryMedia::destroy((string) ($row['storage_key'] ?? ''), (string) $row['media_type']);
+            Database::execute('DELETE FROM property_media WHERE id = ?', [$id]);
+            return;
+        }
         $base = realpath(BASE_PATH . '/uploads');
         $target = realpath(BASE_PATH . '/uploads/' . $row['file_path']);
         if (Database::execute('DELETE FROM property_media WHERE id = ?', [$id]) && $base && $target && str_starts_with($target, $base . DIRECTORY_SEPARATOR) && is_file($target)) @unlink($target);
@@ -103,6 +128,13 @@ final class PropertyMedia
     {
         $row = Database::fetch('SELECT pm.* FROM property_media pm JOIN real_estate_records r ON r.id = pm.record_id WHERE pm.id = ?', [$id]);
         if ($row === null || Records::findVisible($actor, (int) $row['record_id']) === null) Response::notFound('Media was not found.');
+        if (($row['storage_provider'] ?? 'local') === 'cloudinary') {
+            $url = (string) ($row['delivery_url'] ?? '');
+            if ($url === '') Response::notFound('Media was not found.');
+            header('Cache-Control: private, no-store');
+            header('Location: ' . $url, true, 302);
+            exit;
+        }
         $base = realpath(BASE_PATH . '/uploads');
         $target = realpath(BASE_PATH . '/uploads/' . $row['file_path']);
         if (!$base || !$target || !str_starts_with($target, $base . DIRECTORY_SEPARATOR) || !is_file($target)) Response::notFound('Media was not found.');

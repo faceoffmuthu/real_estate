@@ -27,6 +27,7 @@ require BASE_PATH . '/helpers/Notifications.php';
 require BASE_PATH . '/helpers/ApprovalRequest.php';
 require BASE_PATH . '/helpers/Mailer.php';
 require BASE_PATH . '/helpers/PasswordRecovery.php';
+require BASE_PATH . '/helpers/CloudinaryMedia.php';
 require BASE_PATH . '/helpers/CRM.php';
 require BASE_PATH . '/helpers/PropertyMedia.php';
 require BASE_PATH . '/helpers/IndiaLocations.php';

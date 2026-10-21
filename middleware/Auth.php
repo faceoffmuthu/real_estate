@@ -113,12 +113,16 @@ final class Auth
 
     private static function setCookie(string $value, int $expires): void
     {
+        // Browsers reject SameSite=None cookies unless they are also Secure.
+        // Local XAMPP runs over HTTP, where a Lax cookie still works with the
+        // Vite same-origin proxy. HTTPS production can retain cross-site None.
+        $secure = (bool) Config::get('auth.cookie_secure');
         setcookie(Config::get('auth.cookie_name'), $value, [
             'expires'  => $expires,
             'path'     => Config::get('auth.cookie_path'),
-            'secure'   => Config::get('auth.cookie_secure'),
+            'secure'   => $secure,
             'httponly' => true,
-            'samesite' => 'None',
+            'samesite' => $secure ? 'None' : 'Lax',
         ]);
     }
 

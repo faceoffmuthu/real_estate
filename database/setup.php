@@ -60,7 +60,7 @@ $pdo = Database::connection();
 // 2. Optionally drop existing tables.
 if (in_array('--fresh', $argv, true)) {
     $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
-    foreach (['password_reset_tokens', 'follow_ups', 'schema_migrations', 'notifications', 'record_approval_history', 'property_media', 'real_estate_records', 'parties', 'record_process_stages', 'property_categories', 'property_types', 'activity_logs', 'auth_tokens', 'settings', 'users', 'roles'] as $table) {
+    foreach (['password_reset_tokens', 'follow_ups', 'client_requirements', 'schema_migrations', 'notifications', 'record_approval_history', 'property_media', 'real_estate_records', 'parties', 'record_process_stages', 'property_categories', 'property_types', 'activity_logs', 'auth_tokens', 'settings', 'users', 'roles'] as $table) {
         $pdo->exec("DROP TABLE IF EXISTS `$table`");
     }
     $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
